@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { fr } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
 import Header from '../components/Header';
 import UserSidebar from '../components/UserSidebar';
 import { getHistory, getTrashHistory, saveHistory, saveTrashHistory } from '../database';
 import { formatDeleteDate, getDeleteInfo } from '../utils/trashDelay';
+
+registerLocale('fr', fr);
 
 function formatDate(value) {
   return new Intl.DateTimeFormat('fr-FR', {
@@ -21,7 +26,7 @@ function getDateInputValue(value) {
 export default function Historiques({ user, onNavigate, onLogout }) {
   const [history, setHistory] = useState(() => getHistory());
   const [trashHistory, setTrashHistory] = useState(() => getTrashHistory());
-  const [dateSearch, setDateSearch] = useState('');
+  const [dateSearch, setDateSearch] = useState(null);
 
   useEffect(() => {
     saveHistory(history);
@@ -50,7 +55,11 @@ export default function Historiques({ user, onNavigate, onLogout }) {
     }
     
     if (!dateSearch) return historyToShow;
-    return historyToShow.filter((entry) => getDateInputValue(entry.date) === dateSearch);
+    
+    const searchDate = new Date(dateSearch);
+    const searchDateString = searchDate.toISOString().slice(0, 10);
+    
+    return historyToShow.filter((entry) => getDateInputValue(entry.date) === searchDateString);
   }, [dateSearch, history, user]);
 
   function handleMoveToTrash(entryId) {
@@ -108,10 +117,13 @@ export default function Historiques({ user, onNavigate, onLogout }) {
 
         <label className="history-search">
           <span>Recherche Date</span>
-          <input
-            type="date"
-            value={dateSearch}
-            onChange={(event) => setDateSearch(event.target.value)}
+          <DatePicker
+            selected={dateSearch}
+            onChange={(date) => setDateSearch(date)}
+            dateFormat="dd/MM/yyyy"
+            locale="fr"
+            placeholderText="Sélectionner une date"
+            isClearable
             aria-label="Recherche Date"
           />
         </label>
