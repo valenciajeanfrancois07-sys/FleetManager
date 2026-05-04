@@ -19,10 +19,15 @@ Fonctionnalités du MVP
 
 #Fonctionnalité
 AuthentificationConnexion sécurisée par email et mot de passe2
+
 DashboardVue d'ensemble de la flotte avec statistiques clés3
+
 Gestion des véhiculesConsultation et ajout de véhicules dans le système4
+
 Gestion des matérielsAjout et suivi des matériels associés à la flotte5
+
 Recherche de matérielRecherche rapide d'un matériel spécifique6
+
 Gestion des chauffeursAttribution des chauffeurs aux véhicules de la flotte
 
 -Stack technique
