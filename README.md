@@ -25,11 +25,12 @@ Gestion des matérielsAjout et suivi des matériels associés à la flotte5
 Recherche de matérielRecherche rapide d'un matériel spécifique6
 Gestion des chauffeursAttribution des chauffeurs aux véhicules de la flotte
 
-Stack technique
+-Stack technique
+
 Framework React.js
 Build tool Vite
-LangagesJavaScript, CSS, HTML
-DéploiementVercel
+Langages JavaScript, CSS, HTML
+Déploiement Vercel
 VersioningGit / GitHub
 
 🚀 Exécuter le projet en local
