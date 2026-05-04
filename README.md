@@ -13,22 +13,29 @@ Lien🌐 Application déployéehttps://fleet-manager-sable.vercel.app/
 Pour tester l'application, utilisez les identifiants suivants :
 
 Emailvotre-email@test.com
-Mot-de-passe : thebestfleetmanagerservice
+Mot-de-passe Admin : thebestfleetmanagerservice
 
 Fonctionnalités du MVP
+
 #Fonctionnalité
 AuthentificationConnexion sécurisée par email et mot de passe2
+
 DashboardVue d'ensemble de la flotte avec statistiques clés3
+
 Gestion des véhiculesConsultation et ajout de véhicules dans le système4
+
 Gestion des matérielsAjout et suivi des matériels associés à la flotte5
+
 Recherche de matérielRecherche rapide d'un matériel spécifique6
+
 Gestion des chauffeursAttribution des chauffeurs aux véhicules de la flotte
 
-Stack technique
+-Stack technique
+
 Framework React.js
 Build tool Vite
-LangagesJavaScript, CSS, HTML
-DéploiementVercel
+Langages JavaScript, CSS, HTML
+Déploiement Vercel
 VersioningGit / GitHub
 
 🚀 Exécuter le projet en local
