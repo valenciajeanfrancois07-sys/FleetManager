@@ -13,7 +13,7 @@ Lien🌐 Application déployéehttps://fleet-manager-sable.vercel.app/
 Pour tester l'application, utilisez les identifiants suivants :
 
 Emailvotre-email@test.com
-Mot-de-passe : thebestfleetmanagerservice
+Mot-de-passe Admin : thebestfleetmanagerservice
 
 Fonctionnalités du MVP
 #Fonctionnalité
