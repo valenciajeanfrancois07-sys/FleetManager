@@ -13,6 +13,8 @@ import {
   getTrashVehicles,
   getUsers,
   getVehicles,
+  saveHistory,
+  saveTrashVehicles,
   saveUsers,
   saveVehicles,
 } from "../database";
