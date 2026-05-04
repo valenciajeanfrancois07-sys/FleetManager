@@ -1,16 +1,49 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ Fleet Manager
+Application web de gestion de flotte de véhicules — Version
 
-Currently, two official plugins are available:
+ MVP Présentation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Fleet Manager est une application web moderne permettant de centraliser et gérer efficacement une flotte de véhicules. Elle offre aux gestionnaires une interface intuitive pour suivre les véhicules, les matériels et les chauffeurs en un seul endroit.
 
-## React Compiler
+🔗 Liens importants
+Lien🌐 Application déployéehttps://fleet-manager-sable.vercel.app/
+💻 Dépôt GitHubhttps://github.com/valenciajeanfrancois07-sys/FleetManager
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+🔐 Accès à l'application
+Pour tester l'application, utilisez les identifiants suivants :
 
-## Expanding the ESLint configuration
+ Emailvotre-email@test.com 
+ Mot-de-passe : thebestfleetmanagerservice
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+ Fonctionnalités du MVP
+#Fonctionnalité
+ AuthentificationConnexion sécurisée par email et mot de passe2
+  DashboardVue d'ensemble de la flotte avec statistiques clés3
+  Gestion des véhiculesConsultation et ajout de véhicules dans le système4
+  Gestion des matérielsAjout et suivi des matériels associés à la flotte5
+  Recherche de matérielRecherche rapide d'un matériel spécifique6
+  Gestion des chauffeursAttribution des chauffeurs aux véhicules de la flotte
+
+ Stack technique
+  Framework React.js
+  Build tool Vite
+  LangagesJavaScript, CSS, HTML
+  DéploiementVercel
+  VersioningGit / GitHub
+
+🚀 Exécuter le projet en local
+bash# 1. Cloner le dépôt
+git clone https://github.com/valenciajeanfrancois07-sys/FleetManager
+
+# 2. Accéder au dossier
+cd FleetManager
+
+# 3. Installer les dépendances
+npm install
+
+# 4. Lancer le serveur de développement
+npm run dev
+
+👥 Équipe
+Projet réalisé en collaboration.
