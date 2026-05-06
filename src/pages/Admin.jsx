@@ -82,7 +82,10 @@ export default function Admin({
     return adminName.trim() || user?.nom || "Admin";
   };
 
-  const sidebarUser = { nom: getAdminDisplayName(), role: "Admin" };
+  const sidebarUser = {
+    nom: getAdminDisplayName(),
+    role: isUnlocked ? "Admin" : user?.role || "Utilisateur",
+  };
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
