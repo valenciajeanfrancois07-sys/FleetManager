@@ -27,6 +27,20 @@ input {
   border: 1px solid #000000;
 }
 
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  background: #eef7ff;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.auth-main {
+  width: 100%;
+  max-width: 400px;
+}
+
 .fleet-sidebar {
   display: flex;
   flex: 0 0 230px;
@@ -94,7 +108,7 @@ input {
 }
 
 .nav-link.active::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -5px;
   top: 50%;
@@ -194,7 +208,6 @@ input {
   height: 20px;
   margin-right: 8px;
 }
-
 
 .dashboard-shell {
   background: linear-gradient(135deg, #eef7ff 0%, #d4e4ff 100%);
@@ -1044,7 +1057,9 @@ input {
   border-radius: 50%;
   background: #f0f2f6;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .row-dropdown:hover {
