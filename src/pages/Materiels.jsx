@@ -1,36 +1,44 @@
-import { useEffect, useMemo, useState } from 'react';
-import Button from '../components/Button';
-import Header from '../components/Header';
-import SearchBar from '../components/SearchBar';
-import UserSidebar from '../components/UserSidebar';
-import VehicleModal from '../components/VehicleModal';
-import { getMaterials, getTrashMaterials, saveMaterials, saveTrashMaterials, getHistory, saveHistory } from '../database';
-import { formatDeleteDate, getDeleteInfo } from '../utils/trashDelay';
+import { useEffect, useMemo, useState } from "react";
+import Button from "../components/Button";
+import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import UserSidebar from "../components/UserSidebar";
+import VehicleModal from "../components/VehicleModal";
+import {
+  getMaterials,
+  getTrashMaterials,
+  saveMaterials,
+  saveTrashMaterials,
+  getHistory,
+  saveHistory,
+} from "../database";
+import { formatDeleteDate, getDeleteInfo } from "../utils/trashDelay";
 
 const defaultForm = {
-  nom: '',
+  nom: "",
   quantite: 1,
-  etat: 'Bon',
-  disponibilite: 'Disponible',
+  etat: "Bon",
+  disponibilite: "Disponible",
 };
 
 export default function Materiels({ user, onNavigate, onLogout }) {
   const [materials, setMaterials] = useState(() => getMaterials());
-  const [trashMaterials, setTrashMaterials] = useState(() => getTrashMaterials());
-  const [search, setSearch] = useState('');
+  const [trashMaterials, setTrashMaterials] = useState(() =>
+    getTrashMaterials(),
+  );
+  const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
 
-  
   function addToHistory(action, materialName) {
     const history = getHistory() || [];
     const newEntry = {
       id: Date.now(),
       date: new Date().toISOString(),
       action: action,
-      vehicle: materialName,  
-      user: user?.nom || 'Utilisateur inconnu', 
-      timestamp: new Date().toISOString()
+      vehicle: materialName,
+      user: user?.nom || "Utilisateur inconnu",
+      timestamp: new Date().toISOString(),
     };
     history.unshift(newEntry);
     saveHistory(history);
@@ -47,8 +55,20 @@ export default function Materiels({ user, onNavigate, onLogout }) {
   const filteredMaterials = useMemo(() => {
     const value = search.trim().toLowerCase();
     if (!value) return materials;
-    return materials.filter((material) => material.nom.toLowerCase().includes(value));
+    return materials.filter((material) =>
+      material.nom.toLowerCase().includes(value),
+    );
   }, [materials, search]);
+
+  const materialStats = useMemo(
+    () => ({
+      total: materials.length,
+      available: materials.filter((m) => m.disponibilite === "Disponible")
+        .length,
+      maintenance: materials.filter((m) => m.etat !== "Bon").length,
+    }),
+    [materials],
+  );
 
   function updateField(field, value) {
     setForm((currentForm) => ({
@@ -59,11 +79,11 @@ export default function Materiels({ user, onNavigate, onLogout }) {
 
   function handleSubmit(event) {
     event.preventDefault();
-    const materialName = form.nom.trim() || 'Nouveau matériel';
+    const materialName = form.nom.trim() || "Nouveau matériel";
     const etat = form.etat;
-   
-    const disponibilite = etat === 'Bon' ? 'Disponible' : 'Non disponible';
-    
+
+    const disponibilite = etat === "Bon" ? "Disponible" : "Non disponible";
+
     const newMaterial = {
       id: Date.now(),
       nom: materialName,
@@ -71,39 +91,43 @@ export default function Materiels({ user, onNavigate, onLogout }) {
       etat: etat,
       disponibilite: disponibilite,
     };
-    
-    setMaterials((currentMaterials) => [
-      ...currentMaterials,
-      newMaterial,
-    ]);
-    
-    
+
+    setMaterials((currentMaterials) => [...currentMaterials, newMaterial]);
+
     addToHistory(`Ajouté: ${materialName}`, materialName);
-    
+
     setForm(defaultForm);
     setIsModalOpen(false);
   }
 
   function handleMoveToTrash(materialId) {
     // Vérifier les permissions - tout le monde peut supprimer ses propres travaux
-    const materialToDelete = materials.find((material) => material.id === materialId);
+    const materialToDelete = materials.find(
+      (material) => material.id === materialId,
+    );
     if (!materialToDelete) return;
-    
+
     // Admin a tous les droits, les autres utilisateurs ne peuvent supprimer que leurs propres travaux
-    if (user?.role === 'Admin') {
+    if (user?.role === "Admin") {
       // Admin peut supprimer n'importe quel matériel
     } else {
       // Vérifier si le matériel appartient à l'utilisateur actuel
-      const currentUserHistory = getHistory().filter(entry => entry.vehicle === materialToDelete.nom);
-      const isOwnMaterial = currentUserHistory.some(entry => entry.user === user?.nom);
-      
+      const currentUserHistory = getHistory().filter(
+        (entry) => entry.vehicle === materialToDelete.nom,
+      );
+      const isOwnMaterial = currentUserHistory.some(
+        (entry) => entry.user === user?.nom,
+      );
+
       if (!isOwnMaterial) {
-        alert('Vous ne pouvez supprimer que vos propres matériels.');
+        alert("Vous ne pouvez supprimer que vos propres matériels.");
         return;
       }
     }
 
-    setMaterials((currentMaterials) => currentMaterials.filter((material) => material.id !== materialId));
+    setMaterials((currentMaterials) =>
+      currentMaterials.filter((material) => material.id !== materialId),
+    );
     setTrashMaterials((currentTrash) => [
       {
         ...materialToDelete,
@@ -112,55 +136,95 @@ export default function Materiels({ user, onNavigate, onLogout }) {
       ...currentTrash,
     ]);
 
-    
     addToHistory(`Supprimé: ${materialToDelete.nom}`, materialToDelete.nom);
   }
 
   function handleRestore(materialId) {
-    const materialToRestore = trashMaterials.find((material) => material.id === materialId);
+    const materialToRestore = trashMaterials.find(
+      (material) => material.id === materialId,
+    );
     if (!materialToRestore) return;
 
     // Admin a tous les droits, les autres utilisateurs ne peuvent restaurer que leurs propres travaux
-    if (user?.role === 'Admin') {
+    if (user?.role === "Admin") {
       // Admin peut restaurer n'importe quel matériel
     } else {
       // Vérifier si le matériel appartient à l'utilisateur actuel
-      const currentUserHistory = getHistory().filter(entry => entry.vehicle === materialToRestore.nom);
-      const isOwnMaterial = currentUserHistory.some(entry => entry.user === user?.nom);
-      
+      const currentUserHistory = getHistory().filter(
+        (entry) => entry.vehicle === materialToRestore.nom,
+      );
+      const isOwnMaterial = currentUserHistory.some(
+        (entry) => entry.user === user?.nom,
+      );
+
       if (!isOwnMaterial) {
-        alert('Vous ne pouvez restaurer que vos propres matériels.');
+        alert("Vous ne pouvez restaurer que vos propres matériels.");
         return;
       }
     }
 
     const { deletedAt, ...restoredMaterial } = materialToRestore;
-    setTrashMaterials((currentTrash) => currentTrash.filter((material) => material.id !== materialId));
+    setTrashMaterials((currentTrash) =>
+      currentTrash.filter((material) => material.id !== materialId),
+    );
     setMaterials((currentMaterials) => [restoredMaterial, ...currentMaterials]);
   }
 
   function handleDeleteForever(materialId) {
-    const materialToDelete = trashMaterials.find((material) => material.id === materialId);
-    if (!materialToDelete || !getDeleteInfo(materialToDelete.deletedAt).canDelete) return;
+    const materialToDelete = trashMaterials.find(
+      (material) => material.id === materialId,
+    );
+    if (
+      !materialToDelete ||
+      !getDeleteInfo(materialToDelete.deletedAt).canDelete
+    )
+      return;
 
-    setTrashMaterials((currentTrash) => currentTrash.filter((material) => material.id !== materialId));
+    setTrashMaterials((currentTrash) =>
+      currentTrash.filter((material) => material.id !== materialId),
+    );
   }
 
   return (
     <div className="dashboard-shell materiels-shell">
-      <UserSidebar user={user} onNavigate={onNavigate} onLogout={onLogout} activePage="materiels" />
+      <UserSidebar
+        user={user}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        activePage="materiels"
+      />
 
       <main className="vehicles-main materiels-main">
         <Header title="Matériels">
           <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-            <span aria-hidden="true" className="plus-icon">+</span>
-            Ajouter Matériels
+            <span aria-hidden="true" className="plus-icon">
+              +
+            </span>
+            Ajouter Matériel
           </Button>
         </Header>
 
+        <section className="page-summary-grid">
+          <article className="metric-card">
+            <span>Total matériels</span>
+            <strong>{materialStats.total}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Disponibles</span>
+            <strong>{materialStats.available}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Besoin d'entretien</span>
+            <strong>{materialStats.maintenance}</strong>
+          </article>
+        </section>
+
         <SearchBar value={search} onChange={setSearch} />
 
-        <section className="vehicle-table-card" aria-label="Liste des matériels">
+        <section
+          className="vehicle-table-card"
+          aria-label="Liste des matériels"
+        >
           <table className="vehicle-table">
             <thead>
               <tr>
@@ -177,91 +241,85 @@ export default function Materiels({ user, onNavigate, onLogout }) {
                   <td>{material.nom}</td>
                   <td>{material.quantite}</td>
                   <td>
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <div
+                      style={{ position: "relative", display: "inline-block" }}
+                    >
                       <button
                         type="button"
+                        className={`status-pill ${
+                          material.etat === "Bon"
+                            ? "status-good"
+                            : material.etat === "En panne"
+                              ? "status-bad"
+                              : "status-warning"
+                        }`}
                         onClick={() => {
-                          const newEtat = material.etat === 'Bon' ? 'En panne' : 
-                                         material.etat === 'En panne' ? 'Entretien' : 'Bon';
-                          const currentTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                          
-                          
-                          const newDisponibilite = newEtat === 'Bon' ? 'Disponible' : 'Non disponible';
-                          
-                          const updatedMaterials = materials.map(m => 
-                            m.id === material.id ? { 
-                              ...m, 
-                              etat: newEtat,
-                              disponibilite: newDisponibilite
-                            } : m
+                          const newEtat =
+                            material.etat === "Bon"
+                              ? "En panne"
+                              : material.etat === "En panne"
+                                ? "Entretien"
+                                : "Bon";
+                          const currentTime = new Date().toLocaleTimeString(
+                            "fr-FR",
+                            { hour: "2-digit", minute: "2-digit" },
+                          );
+                          const newDisponibilite =
+                            newEtat === "Bon" ? "Disponible" : "Non disponible";
+                          const updatedMaterials = materials.map((m) =>
+                            m.id === material.id
+                              ? {
+                                  ...m,
+                                  etat: newEtat,
+                                  disponibilite: newDisponibilite,
+                                }
+                              : m,
                           );
                           setMaterials(updatedMaterials);
-                          
-                          
                           addToHistory(
-                            `État: ${material.etat} (${currentTime}) -> ${newEtat}`, 
-                            material.nom
+                            `État: ${material.etat} (${currentTime}) -> ${newEtat}`,
+                            material.nom,
                           );
                         }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          padding: '4px 8px',
-                          border: '1px solid #ddd',
-                          borderRadius: '4px',
-                          background: material.etat === 'Bon' ? '#f0fdf4' : 
-                                     material.etat === 'En panne' ? '#fef2f2' : '#fffbeb',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 'bold'
-                        }}
                       >
-                        {material.etat === 'Bon' ? (
-                          <>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#28c76f">
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                            <span style={{ color: '#28c76f' }}>Bon</span>
-                          </>
-                        ) : material.etat === 'En panne' ? (
-                          <>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#ea5455">
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                            </svg>
-                            <span style={{ color: '#ea5455' }}>En panne</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#ffcc4d">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                            <span style={{ color: '#ffcc4d' }}>Entretien</span>
-                          </>
-                        )}
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="#666" style={{ marginLeft: '4px' }}>
-                          <path d="M7 10l5 5 5-5H7z"/>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="#ffffff"
+                        >
+                          {material.etat === "Bon" ? (
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                          ) : material.etat === "En panne" ? (
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                          ) : (
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          )}
+                        </svg>
+                        <span>
+                          {material.etat === "Bon"
+                            ? "Bon"
+                            : material.etat === "En panne"
+                              ? "En panne"
+                              : "Entretien"}
+                        </span>
+                        <svg
+                          width="8"
+                          height="8"
+                          viewBox="0 0 24 24"
+                          fill="#ffffff"
+                          style={{ marginLeft: "4px" }}
+                        >
+                          <path d="M7 10l5 5 5-5H7z" />
                         </svg>
                       </button>
                     </div>
                   </td>
                   <td>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      {material.disponibilite === 'Disponible' ? (
-                        <>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="#28c76f">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                          </svg>
-                          <span style={{ color: '#28c76f', fontWeight: 'bold' }}>Disponible</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="#ea5455">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                          </svg>
-                          <span style={{ color: '#ea5455', fontWeight: 'bold' }}>Non disponible</span>
-                        </>
-                      )}
+                    <span className="availability-pill">
+                      {material.disponibilite === "Disponible"
+                        ? "Disponible"
+                        : "Non disponible"}
                     </span>
                   </td>
                   <td>
@@ -280,7 +338,9 @@ export default function Materiels({ user, onNavigate, onLogout }) {
               ))}
             </tbody>
           </table>
-          {filteredMaterials.length === 0 && <p className="empty-state">Aucun matériel trouvé.</p>}
+          {filteredMaterials.length === 0 && (
+            <p className="empty-state">Aucun matériel trouvé.</p>
+          )}
         </section>
 
         <section className="trash-section">
@@ -293,7 +353,7 @@ export default function Materiels({ user, onNavigate, onLogout }) {
             <p className="empty-state">Aucun matériel dans la corbeille.</p>
           ) : (
             <div className="trash-list">
-              {trashMaterials.map((material) => (
+              {trashMaterials.map((material) =>
                 (() => {
                   const deleteInfo = getDeleteInfo(material.deletedAt);
 
@@ -301,11 +361,19 @@ export default function Materiels({ user, onNavigate, onLogout }) {
                     <div className="trash-row" key={material.id}>
                       <div>
                         <strong>{material.nom}</strong>
-                        <span>Quantité: {material.quantite} - {material.etat}</span>
-                        <span>{deleteInfo.label} ({formatDeleteDate(deleteInfo.availableAt)})</span>
+                        <span>
+                          Quantité: {material.quantite} - {material.etat}
+                        </span>
+                        <span>
+                          {deleteInfo.label} (
+                          {formatDeleteDate(deleteInfo.availableAt)})
+                        </span>
                       </div>
                       <div className="trash-actions">
-                        <button type="button" onClick={() => handleRestore(material.id)}>
+                        <button
+                          type="button"
+                          onClick={() => handleRestore(material.id)}
+                        >
                           Restaurer
                         </button>
                         <button
@@ -318,8 +386,8 @@ export default function Materiels({ user, onNavigate, onLogout }) {
                       </div>
                     </div>
                   );
-                })()
-              ))}
+                })(),
+              )}
             </div>
           )}
         </section>
@@ -338,7 +406,10 @@ export default function Materiels({ user, onNavigate, onLogout }) {
 
           <label>
             Nom
-            <input value={form.nom} onChange={(event) => updateField('nom', event.target.value)} />
+            <input
+              value={form.nom}
+              onChange={(event) => updateField("nom", event.target.value)}
+            />
           </label>
 
           <label>
@@ -347,13 +418,16 @@ export default function Materiels({ user, onNavigate, onLogout }) {
               type="number"
               min="1"
               value={form.quantite}
-              onChange={(event) => updateField('quantite', event.target.value)}
+              onChange={(event) => updateField("quantite", event.target.value)}
             />
           </label>
 
           <label>
             État
-            <select value={form.etat} onChange={(event) => updateField('etat', event.target.value)}>
+            <select
+              value={form.etat}
+              onChange={(event) => updateField("etat", event.target.value)}
+            >
               <option>Bon</option>
               <option>Endommagé</option>
               <option>Entretien</option>
@@ -362,7 +436,12 @@ export default function Materiels({ user, onNavigate, onLogout }) {
 
           <label>
             Disponibilité
-            <select value={form.disponibilite} onChange={(event) => updateField('disponibilite', event.target.value)}>
+            <select
+              value={form.disponibilite}
+              onChange={(event) =>
+                updateField("disponibilite", event.target.value)
+              }
+            >
               <option>Disponible</option>
               <option>Non disponible</option>
             </select>

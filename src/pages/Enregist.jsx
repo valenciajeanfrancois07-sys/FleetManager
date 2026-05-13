@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createUser } from "../database";
+import registerHero from "../assets/voiture2.avif";
 
 export default function Enregist({ onConnect, onAdmin, onRegisterSuccess }) {
   const [form, setForm] = useState({ nom: "", email: "", password: "" });
@@ -35,6 +36,11 @@ export default function Enregist({ onConnect, onAdmin, onRegisterSuccess }) {
     <div className="auth-container">
       <main className="auth-main">
         <section className="auth-area register-area">
+          <img
+            src={registerHero}
+            alt="Inscription FleetManager"
+            className="auth-hero"
+          />
           <h1>FleetManager</h1>
 
           <form className="login-card register-card" onSubmit={handleSubmit}>

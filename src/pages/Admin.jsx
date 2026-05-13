@@ -19,6 +19,8 @@ import {
   saveVehicles,
 } from "../database";
 import { formatDeleteDate, getDeleteInfo } from "../utils/trashDelay";
+import adminHero from "../assets/voiture1.avif";
+import adminBanner from "../assets/voiture2.avif";
 
 const ADMIN_PASSWORD = "thebestfleetmanagerservice";
 
@@ -220,6 +222,11 @@ export default function Admin({
 
         <main className="main-panel admin-lock-main">
           <form className="admin-lock-card" onSubmit={handleAdminSubmit}>
+            <img
+              src={adminHero}
+              alt="Administration FleetManager"
+              className="admin-hero"
+            />
             <h1>Connexion Admin</h1>
             <p>Entre le mot de passe admin pour accéder au contrôle complet.</p>
             <input
