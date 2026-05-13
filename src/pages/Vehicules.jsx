@@ -61,9 +61,22 @@ export default function Vehicules({ user, onNavigate, onLogout }) {
         (vehicle.nom?.toLowerCase() || "").includes(value) ||
         (vehicle.modele?.toLowerCase() || "").includes(value) ||
         (vehicle.immatriculation?.toLowerCase() || "").includes(value) ||
-        (vehicle.conducteur?.toLowerCase() || "").includes(value),
+        (vehicle.conducteur?.toLowerCase() || "").includes(value) ||
+        (vehicle.annee?.toLowerCase() || "").includes(value) ||
+        (vehicle.etat?.toLowerCase() || "").includes(value) ||
+        (vehicle.disponibilite?.toLowerCase() || "").includes(value),
     );
   }, [search, vehicles]);
+
+  const vehicleStats = useMemo(
+    () => ({
+      total: vehicles.length,
+      available: vehicles.filter((v) => v.disponibilite === "Disponible")
+        .length,
+      maintenance: vehicles.filter((v) => v.etat !== "Bon").length,
+    }),
+    [vehicles],
+  );
 
   function handleChange(field, value) {
     setForm((currentForm) => ({
@@ -169,9 +182,24 @@ export default function Vehicules({ user, onNavigate, onLogout }) {
             <span aria-hidden="true" className="plus-icon">
               +
             </span>
-            Ajouter Véhicules
+            Ajouter Véhicule
           </Button>
         </Header>
+
+        <section className="page-summary-grid">
+          <article className="metric-card">
+            <span>Total véhicules</span>
+            <strong>{vehicleStats.total}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Disponibles</span>
+            <strong>{vehicleStats.available}</strong>
+          </article>
+          <article className="metric-card">
+            <span>En maintenance</span>
+            <strong>{vehicleStats.maintenance}</strong>
+          </article>
+        </section>
 
         <SearchBar value={search} onChange={setSearch} />
 
@@ -204,9 +232,7 @@ export default function Vehicules({ user, onNavigate, onLogout }) {
                   </td>
                   <td>{vehicle.modele || "-"}</td>
                   <td>
-                    <span
-                      style={{ fontFamily: "monospace", fontWeight: "bold" }}
-                    >
+                    <span className="vehicle-code">
                       {vehicle.immatriculation || "-"}
                     </span>
                   </td>
@@ -217,6 +243,13 @@ export default function Vehicules({ user, onNavigate, onLogout }) {
                     >
                       <button
                         type="button"
+                        className={`status-pill ${
+                          vehicle.etat === "Bon"
+                            ? "status-good"
+                            : vehicle.etat === "En panne"
+                              ? "status-bad"
+                              : "status-warning"
+                        }`}
                         onClick={() => {
                           // Admin a tous les droits, les autres utilisateurs ne peuvent modifier que leurs propres travaux
                           if (user?.role === "Admin") {
@@ -268,66 +301,39 @@ export default function Vehicules({ user, onNavigate, onLogout }) {
                             vehicle.nom,
                           );
                         }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          padding: "4px 8px",
-                          border: "1px solid #ddd",
-                          borderRadius: "4px",
-                          background:
-                            vehicle.etat === "Bon"
-                              ? "#f0fdf4"
-                              : vehicle.etat === "En panne"
-                                ? "#fef2f2"
-                                : "#fffbeb",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                        }}
                       >
-                        {vehicle.etat === "Bon" ? (
-                          <>
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="#28c76f"
-                            >
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                            </svg>
-                            <span style={{ color: "#28c76f" }}>Bon</span>
-                          </>
-                        ) : vehicle.etat === "En panne" ? (
-                          <>
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="#ea5455"
-                            >
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                            </svg>
-                            <span style={{ color: "#ea5455" }}>En panne</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="#ffcc4d"
-                            >
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                            </svg>
-                            <span style={{ color: "#ffcc4d" }}>Entretien</span>
-                          </>
-                        )}
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill={
+                            vehicle.etat === "Bon"
+                              ? "#ffffff"
+                              : vehicle.etat === "En panne"
+                                ? "#ffffff"
+                                : "#ffffff"
+                          }
+                        >
+                          {vehicle.etat === "Bon" ? (
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                          ) : vehicle.etat === "En panne" ? (
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                          ) : (
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          )}
+                        </svg>
+                        <span>
+                          {vehicle.etat === "Bon"
+                            ? "Bon"
+                            : vehicle.etat === "En panne"
+                              ? "En panne"
+                              : "Entretien"}
+                        </span>
                         <svg
                           width="8"
                           height="8"
                           viewBox="0 0 24 24"
-                          fill="#666"
+                          fill="#ffffff"
                           style={{ marginLeft: "4px" }}
                         >
                           <path d="M7 10l5 5 5-5H7z" />
@@ -336,46 +342,10 @@ export default function Vehicules({ user, onNavigate, onLogout }) {
                     </div>
                   </td>
                   <td>
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                      }}
-                    >
-                      {vehicle.disponibilite === "Disponible" ? (
-                        <>
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="#28c76f"
-                          >
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                          </svg>
-                          <span
-                            style={{ color: "#28c76f", fontWeight: "bold" }}
-                          >
-                            Disponible
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="#ea5455"
-                          >
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                          </svg>
-                          <span
-                            style={{ color: "#ea5455", fontWeight: "bold" }}
-                          >
-                            Non disponible
-                          </span>
-                        </>
-                      )}
+                    <span className="availability-pill">
+                      {vehicle.disponibilite === "Disponible"
+                        ? "Disponible"
+                        : "Non disponible"}
                     </span>
                   </td>
                   <td>

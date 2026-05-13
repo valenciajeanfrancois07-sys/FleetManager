@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { loginUser } from "../database";
+import heroImage from "../assets/voiture5.webp";
 
 export default function Connect({ onConnect, onRegister, onAdmin, onLogin }) {
   const [showReset, setShowReset] = useState(false);
@@ -36,6 +37,11 @@ export default function Connect({ onConnect, onRegister, onAdmin, onLogin }) {
     <div className="auth-container">
       <main className="auth-main">
         <section className="auth-area" id="connexion">
+          <img
+            src={heroImage}
+            alt="Gestion de flotte FleetManager"
+            className="auth-hero"
+          />
           <h1>FleetManager</h1>
 
           <form className="login-card" onSubmit={handleSubmit}>
