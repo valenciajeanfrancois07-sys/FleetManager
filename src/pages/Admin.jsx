@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import Button from "../components/Button";
 import Header from "../components/Header";
 import UserSidebar from "../components/UserSidebar";
-import AuthSidebar from "../components/AuthSidebar";
 import {
   deleteUser,
   deleteVehicle,
@@ -19,31 +18,8 @@ import {
   saveVehicles,
 } from "../database";
 import { formatDeleteDate, getDeleteInfo } from "../utils/trashDelay";
-import adminHero from "../assets/voiture1.avif";
-import adminBanner from "../assets/voiture2.avif";
 
-const ADMIN_PASSWORD = "thebestfleetmanagerservice";
-
-export default function Admin({
-  user,
-  onNavigate,
-  onConnect,
-  onRegister,
-  isUnlocked,
-  onUnlock,
-  onLogout,
-}) {
-  console.log("Admin component rendered, isUnlocked:", isUnlocked);
-  console.log("Admin props:", {
-    user,
-    onNavigate,
-    onConnect,
-    onRegister,
-    isUnlocked,
-    onUnlock,
-    onLogout,
-  });
-  console.log("Admin component starting...");
+export default function Admin({ user, onNavigate, onLogout }) {
   const [users, setUsers] = useState(() => getUsers());
   const [vehicles, setVehicles] = useState(() => getVehicles());
   const [trashVehicles] = useState(() => getTrashVehicles());
@@ -69,24 +45,44 @@ export default function Admin({
   });
 
   const [trashHistory] = useState(() => getTrashHistory());
-  const [adminName, setAdminName] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  // Récupérer le nom de l'admin depuis le localStorage s'il est connecté
-  const getAdminDisplayName = () => {
-    if (isUnlocked) {
-      const adminData = localStorage.getItem("fleetmanager_admin_session");
-      if (adminData) {
-        const admin = JSON.parse(adminData);
-        return admin.name || adminName.trim() || "Admin";
-      }
-    }
-    return adminName.trim() || user?.nom || "Admin";
-  };
+
+  if (!user || user.role !== "Admin") {
+    return (
+      <div className="dashboard-shell admin-shell">
+        <UserSidebar
+          user={user}
+          onNavigate={onNavigate}
+          onLogout={onLogout}
+          activePage="dashboard"
+        />
+        <main className="vehicles-main admin-main admin-main">
+          <Header title="Accès administrateur" />
+          <section className="admin-panel">
+            <p>Vous n’êtes pas autorisé à accéder à cette zone.</p>
+            <button
+              type="button"
+              onClick={() => onNavigate("dashboard")}
+              style={{
+                padding: "10px 16px",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                marginTop: "16px",
+              }}
+            >
+              Retour au dashboard
+            </button>
+          </section>
+        </main>
+      </div>
+    );
+  }
 
   const sidebarUser = {
-    nom: getAdminDisplayName(),
-    role: isUnlocked ? "Admin" : user?.role || "Utilisateur",
+    nom: user?.nom || "Admin",
+    role: "Admin",
   };
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -148,31 +144,6 @@ export default function Admin({
     }
   }
 
-  function handleAdminSubmit(event) {
-    event.preventDefault();
-
-    if (!adminName.trim()) {
-      setMessage("Entre le nom admin.");
-      return;
-    }
-
-    if (password === ADMIN_PASSWORD) {
-      setMessage("");
-      // Sauvegarder le nom de l'admin dans le localStorage pour le garder dans le menu
-      localStorage.setItem(
-        "fleetmanager_admin_session",
-        JSON.stringify({
-          name: adminName.trim(),
-          timestamp: new Date().toISOString(),
-        }),
-      );
-      onUnlock();
-      return;
-    }
-
-    setMessage("Mot de passe admin incorrect.");
-  }
-
   const filteredUsers = users.filter(
     (user) =>
       (user.nom?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
@@ -194,85 +165,6 @@ export default function Admin({
       (entry.action?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (entry.user?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   );
-
-  if (!isUnlocked) {
-    return (
-      <div className="fleet-shell">
-        <input
-          className="menu-toggle"
-          type="checkbox"
-          id="admin-menu-toggle"
-          aria-label="Ouvrir le menu"
-        />
-        <label
-          className="hamburger"
-          htmlFor="admin-menu-toggle"
-          aria-hidden="true"
-        >
-          <span />
-          <span />
-          <span />
-        </label>
-
-        <AuthSidebar
-          onConnect={onConnect}
-          onRegister={onRegister}
-          onAdmin={() => onNavigate("admin")}
-        />
-
-        <main className="main-panel admin-lock-main">
-          <form className="admin-lock-card" onSubmit={handleAdminSubmit}>
-            <img
-              src={adminHero}
-              alt="Administration FleetManager"
-              className="admin-hero"
-            />
-            <h1>Connexion Admin</h1>
-            <p>Entre le mot de passe admin pour accéder au contrôle complet.</p>
-            <input
-              type="text"
-              placeholder="Nom admin"
-              value={adminName}
-              onChange={(event) => {
-                setAdminName(event.target.value);
-                setMessage("");
-              }}
-              aria-label="Nom admin"
-            />
-            <input
-              type="password"
-              placeholder="Mot de passe admin"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setMessage("");
-              }}
-              aria-label="Mot de passe admin"
-            />
-            <button
-              type="submit"
-              style={{
-                padding: "12px 24px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: "600",
-                transition: "background-color 0.2s ease",
-              }}
-              onMouseOver={(e) => (e.target.style.backgroundColor = "#0056b3")}
-              onMouseOut={(e) => (e.target.style.backgroundColor = "#007bff")}
-            >
-              Entrer
-            </button>
-            {message && <span className="form-message">{message}</span>}
-          </form>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="dashboard-shell admin-shell">
