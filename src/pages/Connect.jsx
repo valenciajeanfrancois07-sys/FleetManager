@@ -10,7 +10,12 @@ export default function Connect({
   onLogin,
 }) {
   const [showReset, setShowReset] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    role: "Employé",
+    adminPassword: "",
+  });
   const [message, setMessage] = useState("");
 
   function updateField(field, value) {
@@ -29,7 +34,16 @@ export default function Connect({
       return;
     }
 
-    const result = loginUser(form.email, form.password);
+    if (form.role === "Admin" && !form.adminPassword.trim()) {
+      setMessage("Veuillez entrer le mot de passe administrateur.");
+      return;
+    }
+
+    const result = loginUser(
+      form.email,
+      form.password,
+      form.role === "Admin" ? form.adminPassword : null,
+    );
 
     if (!result.ok) {
       setMessage(result.message);
@@ -54,6 +68,18 @@ export default function Connect({
             <h2>CONNEXION</h2>
 
             <div className="field-stack">
+              <select
+                value={form.role}
+                onChange={(event) => updateField("role", event.target.value)}
+                aria-label="Rôle utilisateur"
+                className="role-select"
+              >
+                <option value="Employé">Employé</option>
+                <option value="Chauffeur">Chauffeur</option>
+                <option value="Mécanicien">Mécanicien</option>
+                <option value="Admin">Admin</option>
+              </select>
+
               <input
                 type="text"
                 placeholder="Email, ou Téléphone"
@@ -70,6 +96,17 @@ export default function Connect({
                   updateField("password", event.target.value)
                 }
               />
+              {form.role === "Admin" && (
+                <input
+                  type="password"
+                  placeholder="Mot de passe administrateur"
+                  aria-label="Mot de passe administrateur"
+                  value={form.adminPassword}
+                  onChange={(event) =>
+                    updateField("adminPassword", event.target.value)
+                  }
+                />
+              )}
             </div>
 
             <div className="form-row">

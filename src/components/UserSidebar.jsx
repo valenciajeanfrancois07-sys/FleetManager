@@ -92,8 +92,12 @@ export default function UserSidebar({
                         : ""
               }`}
               key={item.label}
-              onClick={() =>
-                onNavigate &&
+              onClick={() => {
+              if (item.label === "Admin" && (!user || user.role !== "Admin")) {
+                alert("Accès administrateur refusé. Vous n'avez pas les permissions nécessaires.");
+                return;
+              }
+              onNavigate &&
                 onNavigate(
                   item.label.toLowerCase() === "véhicules"
                     ? "vehicules"
@@ -102,8 +106,8 @@ export default function UserSidebar({
                       : item.label.toLowerCase() === "historique"
                         ? "historiques"
                         : item.label.toLowerCase(),
-                )
-              }
+                );
+            }}
             >
               {item.icon}
               <span>{item.label}</span>

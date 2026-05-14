@@ -29,6 +29,10 @@ export default function Materiels({ user, onNavigate, onLogout }) {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
+  const [permissionMessage, setPermissionMessage] = useState("");
+
+  // Vérifier si l'utilisateur est admin
+  const isAdmin = user?.role === "Admin";
 
   function addToHistory(action, materialName) {
     const history = getHistory() || [];
@@ -79,6 +83,15 @@ export default function Materiels({ user, onNavigate, onLogout }) {
 
   function handleSubmit(event) {
     event.preventDefault();
+
+    if (!isAdmin) {
+      setPermissionMessage(
+        "Seul un administrateur peut ajouter des matériels.",
+      );
+      setTimeout(() => setPermissionMessage(""), 3000);
+      return;
+    }
+
     const materialName = form.nom.trim() || "Nouveau matériel";
     const etat = form.etat;
 
@@ -100,30 +113,40 @@ export default function Materiels({ user, onNavigate, onLogout }) {
     setIsModalOpen(false);
   }
 
+  function handleRestore(materialId) {
+    if (!isAdmin) {
+      setPermissionMessage(
+        "Seul un administrateur peut restaurer des matériels.",
+      );
+      setTimeout(() => setPermissionMessage(""), 3000);
+      return;
+    }
+
+    const materialToRestore = trashMaterials.find(
+      (material) => material.id === materialId,
+    );
+    if (!materialToRestore) return;
+
+    const { deletedAt, ...restoredMaterial } = materialToRestore;
+    setTrashMaterials((currentTrash) =>
+      currentTrash.filter((material) => material.id !== materialId),
+    );
+    setMaterials((currentMaterials) => [restoredMaterial, ...currentMaterials]);
+  }
+
   function handleMoveToTrash(materialId) {
-    // Vérifier les permissions - tout le monde peut supprimer ses propres travaux
+    if (!isAdmin) {
+      setPermissionMessage(
+        "Seul un administrateur peut supprimer des matériels.",
+      );
+      setTimeout(() => setPermissionMessage(""), 3000);
+      return;
+    }
+
     const materialToDelete = materials.find(
       (material) => material.id === materialId,
     );
     if (!materialToDelete) return;
-
-    // Admin a tous les droits, les autres utilisateurs ne peuvent supprimer que leurs propres travaux
-    if (user?.role === "Admin") {
-      // Admin peut supprimer n'importe quel matériel
-    } else {
-      // Vérifier si le matériel appartient à l'utilisateur actuel
-      const currentUserHistory = getHistory().filter(
-        (entry) => entry.vehicle === materialToDelete.nom,
-      );
-      const isOwnMaterial = currentUserHistory.some(
-        (entry) => entry.user === user?.nom,
-      );
-
-      if (!isOwnMaterial) {
-        alert("Vous ne pouvez supprimer que vos propres matériels.");
-        return;
-      }
-    }
 
     setMaterials((currentMaterials) =>
       currentMaterials.filter((material) => material.id !== materialId),
@@ -139,38 +162,15 @@ export default function Materiels({ user, onNavigate, onLogout }) {
     addToHistory(`Supprimé: ${materialToDelete.nom}`, materialToDelete.nom);
   }
 
-  function handleRestore(materialId) {
-    const materialToRestore = trashMaterials.find(
-      (material) => material.id === materialId,
-    );
-    if (!materialToRestore) return;
-
-    // Admin a tous les droits, les autres utilisateurs ne peuvent restaurer que leurs propres travaux
-    if (user?.role === "Admin") {
-      // Admin peut restaurer n'importe quel matériel
-    } else {
-      // Vérifier si le matériel appartient à l'utilisateur actuel
-      const currentUserHistory = getHistory().filter(
-        (entry) => entry.vehicle === materialToRestore.nom,
+  function handleDeleteForever(materialId) {
+    if (!isAdmin) {
+      setPermissionMessage(
+        "Seul un administrateur peut supprimer définitivement des matériels.",
       );
-      const isOwnMaterial = currentUserHistory.some(
-        (entry) => entry.user === user?.nom,
-      );
-
-      if (!isOwnMaterial) {
-        alert("Vous ne pouvez restaurer que vos propres matériels.");
-        return;
-      }
+      setTimeout(() => setPermissionMessage(""), 3000);
+      return;
     }
 
-    const { deletedAt, ...restoredMaterial } = materialToRestore;
-    setTrashMaterials((currentTrash) =>
-      currentTrash.filter((material) => material.id !== materialId),
-    );
-    setMaterials((currentMaterials) => [restoredMaterial, ...currentMaterials]);
-  }
-
-  function handleDeleteForever(materialId) {
     const materialToDelete = trashMaterials.find(
       (material) => material.id === materialId,
     );
@@ -196,13 +196,46 @@ export default function Materiels({ user, onNavigate, onLogout }) {
 
       <main className="vehicles-main materiels-main">
         <Header title="Matériels">
-          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              if (!isAdmin) {
+                setPermissionMessage(
+                  "Seul un administrateur peut ajouter des matériels.",
+                );
+                setTimeout(() => setPermissionMessage(""), 3000);
+                return;
+              }
+              setIsModalOpen(true);
+            }}
+            disabled={!isAdmin}
+            style={{
+              opacity: isAdmin ? 1 : 0.5,
+              cursor: isAdmin ? "pointer" : "not-allowed",
+            }}
+          >
             <span aria-hidden="true" className="plus-icon">
               +
             </span>
             Ajouter Matériel
           </Button>
         </Header>
+
+        {permissionMessage && (
+          <div
+            style={{
+              padding: "12px 16px",
+              backgroundColor: "#f8d7da",
+              color: "#721c24",
+              border: "1px solid #f5c6cb",
+              borderRadius: "4px",
+              marginBottom: "16px",
+              fontSize: "14px",
+            }}
+          >
+            {permissionMessage}
+          </div>
+        )}
 
         <section className="page-summary-grid">
           <article className="metric-card">
@@ -253,7 +286,16 @@ export default function Materiels({ user, onNavigate, onLogout }) {
                               ? "status-bad"
                               : "status-warning"
                         }`}
+                        disabled={!isAdmin}
                         onClick={() => {
+                          if (!isAdmin) {
+                            setPermissionMessage(
+                              "Seul un administrateur peut modifier l'état des matériels.",
+                            );
+                            setTimeout(() => setPermissionMessage(""), 3000);
+                            return;
+                          }
+
                           const newEtat =
                             material.etat === "Bon"
                               ? "En panne"
@@ -281,6 +323,15 @@ export default function Materiels({ user, onNavigate, onLogout }) {
                             material.nom,
                           );
                         }}
+                        style={{
+                          opacity: isAdmin ? 1 : 0.5,
+                          cursor: isAdmin ? "pointer" : "not-allowed",
+                        }}
+                        title={
+                          isAdmin
+                            ? "Cliquez pour changer l'état"
+                            : "Seul un admin peut modifier"
+                        }
                       >
                         <svg
                           width="12"
@@ -327,7 +378,15 @@ export default function Materiels({ user, onNavigate, onLogout }) {
                       type="button"
                       className="trash-button"
                       onClick={() => handleMoveToTrash(material.id)}
+                      disabled={!isAdmin}
+                      style={{
+                        opacity: isAdmin ? 1 : 0.5,
+                        cursor: isAdmin ? "pointer" : "not-allowed",
+                      }}
                       aria-label={`Mettre ${material.nom} dans la corbeille`}
+                      title={
+                        isAdmin ? "Supprimer" : "Seul un admin peut supprimer"
+                      }
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M8 4h8l1 2h4v2H3V6h4l1-2Zm-1 6h10l-.7 10H7.7L7 10Zm3 2v6h2v-6h-2Zm4 0v6h2v-6h-2Z" />
@@ -373,13 +432,38 @@ export default function Materiels({ user, onNavigate, onLogout }) {
                         <button
                           type="button"
                           onClick={() => handleRestore(material.id)}
+                          disabled={!isAdmin}
+                          style={{
+                            opacity: isAdmin ? 1 : 0.5,
+                            cursor: isAdmin ? "pointer" : "not-allowed",
+                          }}
+                          title={
+                            isAdmin
+                              ? "Restaurer"
+                              : "Seul un admin peut restaurer"
+                          }
                         >
                           Restaurer
                         </button>
                         <button
                           type="button"
-                          disabled={!deleteInfo.canDelete}
+                          disabled={!deleteInfo.canDelete || !isAdmin}
+                          style={{
+                            opacity:
+                              !deleteInfo.canDelete || !isAdmin ? 0.5 : 1,
+                            cursor:
+                              !deleteInfo.canDelete || !isAdmin
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
                           onClick={() => handleDeleteForever(material.id)}
+                          title={
+                            !isAdmin
+                              ? "Seul un admin peut supprimer"
+                              : !deleteInfo.canDelete
+                                ? "Veuillez attendre"
+                                : "Supprimer définitivement"
+                          }
                         >
                           Supprimer
                         </button>

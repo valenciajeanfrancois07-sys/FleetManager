@@ -6,6 +6,7 @@ const MATERIALS_KEY = 'fleetmanager_materials';
 const MATERIALS_TRASH_KEY = 'fleetmanager_materials_trash';
 const HISTORY_KEY = 'fleetmanager_history';
 const HISTORY_TRASH_KEY = 'fleetmanager_history_trash';
+const ADMIN_PASSWORD = 'thebestfleetmanagerservice';
 
 const DEFAULT_ADMIN_USER = {
   id: 1,
@@ -63,12 +64,17 @@ export function createUser(user) {
     return { ok: false, message: 'Cet email existe déjà.' };
   }
 
+  // Vérifier le mot de passe admin si le rôle est Admin
+  if (user.role === 'Admin' && user.adminPassword !== ADMIN_PASSWORD) {
+    return { ok: false, message: 'Mot de passe administrateur incorrect.' };
+  }
+
   const newUser = {
     id: Date.now(),
     nom: user.nom.trim(),
     email,
     password: user.password,
-    role: 'Employée',
+    role: user.role || 'Employé',
   };
 
   write(USERS_KEY, [...users, newUser]);
@@ -77,7 +83,7 @@ export function createUser(user) {
   return { ok: true, user: newUser };
 }
 
-export function loginUser(emailOrPhone, password) {
+export function loginUser(emailOrPhone, password, adminPassword = null) {
   const value = emailOrPhone.trim().toLowerCase();
   const user = getUsers().find(
     (currentUser) => currentUser.email === value && currentUser.password === password,
@@ -85,6 +91,11 @@ export function loginUser(emailOrPhone, password) {
 
   if (!user) {
     return { ok: false, message: 'Email ou mot de passe incorrect.' };
+  }
+
+  // Vérifier le mot de passe admin si l'utilisateur est Admin
+  if (user.role === 'Admin' && adminPassword !== ADMIN_PASSWORD) {
+    return { ok: false, message: 'Mot de passe administrateur incorrect.' };
   }
 
   setSession(user);
@@ -147,6 +158,65 @@ export function deleteUser(userId) {
   const users = getUsers().filter((user) => user.id !== userId);
   saveUsers(users);
   return users;
+}
+
+// Vérifier si un utilisateur peut modifier un autre utilisateur
+export function canModifyUser(currentUser, targetUserId) {
+  if (!currentUser) {
+    return false;
+  }
+  // L'admin peut modifier tous les utilisateurs
+  if (currentUser.role === 'Admin') {
+    return true;
+  }
+  // Un utilisateur ne peut modifier que son propre compte
+  return currentUser.id === targetUserId;
+}
+
+// Mettre à jour un utilisateur avec vérification de permissions
+export function updateUser(currentUser, targetUserId, updatedData) {
+  if (!canModifyUser(currentUser, targetUserId)) {
+    return { ok: false, message: 'Vous n\'avez pas la permission de modifier cet utilisateur.' };
+  }
+
+  const users = getUsers();
+  const userIndex = users.findIndex((u) => u.id === targetUserId);
+
+  if (userIndex === -1) {
+    return { ok: false, message: 'Utilisateur non trouvé.' };
+  }
+
+  const updatedUser = {
+    ...users[userIndex],
+    ...updatedData,
+    // Empêcher la modification de l'ID
+    id: users[userIndex].id,
+  };
+
+  users[userIndex] = updatedUser;
+  write(USERS_KEY, users);
+
+  // Mettre à jour la session si c'est l'utilisateur courant
+  if (currentUser.id === targetUserId) {
+    setSession(updatedUser);
+  }
+
+  return { ok: true, user: updatedUser };
+}
+
+// Supprimer un utilisateur avec vérification de permissions
+export function deleteUserWithPermission(currentUser, targetUserId) {
+  if (!canModifyUser(currentUser, targetUserId)) {
+    return { ok: false, message: 'Vous n\'avez pas la permission de supprimer cet utilisateur.' };
+  }
+
+  // Empêcher l'admin de supprimer son propre compte via cette vérification
+  if (currentUser.id === targetUserId && currentUser.role === 'Admin') {
+    return { ok: false, message: 'Un administrateur ne peut pas supprimer son propre compte de cette façon.' };
+  }
+
+  deleteUser(targetUserId);
+  return { ok: true, message: 'Utilisateur supprimé avec succès.' };
 }
 
 export function getMaterials() {

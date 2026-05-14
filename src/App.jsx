@@ -87,6 +87,12 @@ export default function App() {
       );
     }
 
+    if (currentUser.role !== "Admin") {
+      // Redirect to dashboard if not admin
+      setPage("dashboard");
+      return null;
+    }
+
     return (
       <Admin
         user={currentUser}

@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import UserSidebar from "../components/UserSidebar";
 import {
   deleteUser,
+  deleteUserWithPermission,
   deleteVehicle,
   getHistory,
   getMaterials,
@@ -16,6 +17,8 @@ import {
   saveTrashVehicles,
   saveUsers,
   saveVehicles,
+  updateUser,
+  canModifyUser,
 } from "../database";
 import { formatDeleteDate, getDeleteInfo } from "../utils/trashDelay";
 
@@ -90,6 +93,7 @@ export default function Admin({ user, onNavigate, onLogout }) {
   const [editingUser, setEditingUser] = useState(null);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const [permissionMessage, setPermissionMessage] = useState("");
 
   useEffect(() => {
     saveUsers(users);
@@ -104,18 +108,39 @@ export default function Admin({ user, onNavigate, onLogout }) {
   }
 
   function handleDeleteUser(userId) {
-    setUsers(deleteUser(userId));
+    const result = deleteUserWithPermission(user, userId);
+    if (!result.ok) {
+      setPermissionMessage(result.message);
+      setTimeout(() => setPermissionMessage(""), 3000);
+      return;
+    }
+    setUsers(users.filter((u) => u.id !== userId));
+    setPermissionMessage("");
   }
 
   function handleEditUser(userId) {
+    if (!canModifyUser(user, userId)) {
+      setPermissionMessage(
+        "Vous n'avez pas la permission de modifier cet utilisateur.",
+      );
+      setTimeout(() => setPermissionMessage(""), 3000);
+      return;
+    }
     const userToEdit = users.find((u) => u.id === userId);
     setEditingUser(userToEdit);
+    setPermissionMessage("");
   }
 
   function handleSaveUser() {
     if (editingUser) {
-      setUsers(users.map((u) => (u.id === editingUser.id ? editingUser : u)));
+      const result = updateUser(user, editingUser.id, editingUser);
+      if (!result.ok) {
+        setPermissionMessage(result.message);
+        return;
+      }
+      setUsers(users.map((u) => (u.id === editingUser.id ? result.user : u)));
       setEditingUser(null);
+      setPermissionMessage("");
     }
   }
 
@@ -199,6 +224,21 @@ export default function Admin({ user, onNavigate, onLogout }) {
 
         {/* Barre de recherche et filtres */}
         <section className="admin-controls">
+          {permissionMessage && (
+            <div
+              style={{
+                padding: "12px 16px",
+                backgroundColor: "#f8d7da",
+                color: "#721c24",
+                border: "1px solid #f5c6cb",
+                borderRadius: "4px",
+                marginBottom: "12px",
+                fontSize: "14px",
+              }}
+            >
+              {permissionMessage}
+            </div>
+          )}
           <div className="search-bar">
             <input
               type="text"
@@ -239,46 +279,70 @@ export default function Admin({ user, onNavigate, onLogout }) {
               <p className="empty-state">Aucun utilisateur.</p>
             ) : (
               <div className="admin-list">
-                {filteredUsers.map((currentUser) => (
-                  <div className="admin-list-row" key={currentUser.id}>
-                    <div>
-                      <strong>{currentUser.nom}</strong>
-                      <span>{currentUser.email}</span>
+                {filteredUsers.map((currentUser) => {
+                  const canModify = canModifyUser(user, currentUser.id);
+                  return (
+                    <div className="admin-list-row" key={currentUser.id}>
+                      <div>
+                        <strong>{currentUser.nom}</strong>
+                        <span>{currentUser.email}</span>
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#666",
+                            marginLeft: "8px",
+                          }}
+                        >
+                          Rôle: {currentUser.role}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleEditUser(currentUser.id)}
+                          disabled={!canModify}
+                          style={{
+                            padding: "4px 8px",
+                            backgroundColor: canModify ? "#28a745" : "#ccc",
+                            color: canModify ? "white" : "#999",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: canModify ? "pointer" : "not-allowed",
+                            fontSize: "12px",
+                          }}
+                          title={
+                            canModify
+                              ? "Modifier"
+                              : "Vous n'avez pas la permission"
+                          }
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(currentUser.id)}
+                          disabled={!canModify}
+                          style={{
+                            padding: "4px 8px",
+                            backgroundColor: canModify ? "#dc3545" : "#ccc",
+                            color: canModify ? "white" : "#999",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: canModify ? "pointer" : "not-allowed",
+                            fontSize: "12px",
+                          }}
+                          title={
+                            canModify
+                              ? "Supprimer"
+                              : "Vous n'avez pas la permission"
+                          }
+                        >
+                          Supprimer
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleEditUser(currentUser.id)}
-                        style={{
-                          padding: "4px 8px",
-                          backgroundColor: "#28a745",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                        }}
-                      >
-                        Modifier
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteUser(currentUser.id)}
-                        style={{
-                          padding: "4px 8px",
-                          backgroundColor: "#dc3545",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                        }}
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
