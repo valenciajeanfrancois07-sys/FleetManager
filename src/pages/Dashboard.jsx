@@ -270,10 +270,6 @@ export default function Dashboard({ user, onNavigate, onLogout }) {
         >
           <div className="dashboard-gallery-header">
             <h2>Galerie de la flotte</h2>
-            <p>
-              Un aperçu visuel des images et des concepts qui donnent du sens à
-              votre application.
-            </p>
           </div>
           <div className="dashboard-gallery-grid">
             {sortedGalleryItems.map((item) => {
