@@ -3,7 +3,13 @@ import { createUser } from "../database";
 import registerHero from "../assets/voiture2.avif";
 
 export default function Enregist({ onConnect, onAdmin, onRegisterSuccess }) {
-  const [form, setForm] = useState({ nom: "", email: "", password: "" });
+  const [form, setForm] = useState({
+    nom: "",
+    email: "",
+    password: "",
+    role: "Employé",
+    adminPassword: "",
+  });
   const [message, setMessage] = useState("");
 
   function updateField(field, value) {
@@ -19,6 +25,11 @@ export default function Enregist({ onConnect, onAdmin, onRegisterSuccess }) {
 
     if (!form.nom.trim() || !form.email.trim() || !form.password.trim()) {
       setMessage("Remplis tous les champs.");
+      return;
+    }
+
+    if (form.role === "Admin" && !form.adminPassword.trim()) {
+      setMessage("Veuillez entrer le mot de passe administrateur.");
       return;
     }
 
@@ -68,6 +79,28 @@ export default function Enregist({ onConnect, onAdmin, onRegisterSuccess }) {
                   updateField("password", event.target.value)
                 }
               />
+              <select
+                value={form.role}
+                onChange={(event) => updateField("role", event.target.value)}
+                aria-label="Rôle utilisateur"
+                className="role-select"
+              >
+                <option value="Employé">Employé</option>
+                <option value="Chauffeur">Chauffeur</option>
+                <option value="Mécanicien">Mécanicien</option>
+                <option value="Admin">Admin</option>
+              </select>
+              {form.role === "Admin" && (
+                <input
+                  type="password"
+                  placeholder="Mot de passe administrateur"
+                  aria-label="Mot de passe administrateur"
+                  value={form.adminPassword}
+                  onChange={(event) =>
+                    updateField("adminPassword", event.target.value)
+                  }
+                />
+              )}
             </div>
             <button type="submit" className="primary-button">
               CREER UN COMPTE
