@@ -7,6 +7,14 @@ const MATERIALS_TRASH_KEY = 'fleetmanager_materials_trash';
 const HISTORY_KEY = 'fleetmanager_history';
 const HISTORY_TRASH_KEY = 'fleetmanager_history_trash';
 
+const DEFAULT_ADMIN_USER = {
+  id: 1,
+  nom: 'Administrateur',
+  email: 'admin@fleetmanager.local',
+  password: 'admin123',
+  role: 'Admin',
+};
+
 function read(key, fallback) {
   try {
     const value = localStorage.getItem(key);
@@ -20,8 +28,26 @@ function write(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+// Initialiser l'admin par défaut au chargement
+function initializeDefaultAdmin() {
+  const users = read(USERS_KEY, []);
+  if (users.length === 0) {
+    const initialUsers = [DEFAULT_ADMIN_USER];
+    write(USERS_KEY, initialUsers);
+  }
+}
+
+// Appeler l'initialisation au chargement du module
+initializeDefaultAdmin();
+
 export function getUsers() {
-  return read(USERS_KEY, []);
+  const users = read(USERS_KEY, []);
+  if (users.length === 0) {
+    const initialUsers = [DEFAULT_ADMIN_USER];
+    write(USERS_KEY, initialUsers);
+    return initialUsers;
+  }
+  return users;
 }
 
 export function saveUsers(users) {

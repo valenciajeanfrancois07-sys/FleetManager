@@ -2,7 +2,13 @@ import { useState } from "react";
 import { loginUser } from "../database";
 import heroImage from "../assets/voiture5.webp";
 
-export default function Connect({ onConnect, onRegister, onAdmin, onLogin }) {
+export default function Connect({
+  currentUser,
+  onConnect,
+  onRegister,
+  onAdmin,
+  onLogin,
+}) {
   const [showReset, setShowReset] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
