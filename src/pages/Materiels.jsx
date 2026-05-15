@@ -84,14 +84,6 @@ export default function Materiels({ user, onNavigate, onLogout }) {
   function handleSubmit(event) {
     event.preventDefault();
 
-    if (!isAdmin) {
-      setPermissionMessage(
-        "Seul un administrateur peut ajouter des matériels.",
-      );
-      setTimeout(() => setPermissionMessage(""), 3000);
-      return;
-    }
-
     const materialName = form.nom.trim() || "Nouveau matériel";
     const etat = form.etat;
 
@@ -199,19 +191,7 @@ export default function Materiels({ user, onNavigate, onLogout }) {
           <Button
             variant="primary"
             onClick={() => {
-              if (!isAdmin) {
-                setPermissionMessage(
-                  "Seul un administrateur peut ajouter des matériels.",
-                );
-                setTimeout(() => setPermissionMessage(""), 3000);
-                return;
-              }
               setIsModalOpen(true);
-            }}
-            disabled={!isAdmin}
-            style={{
-              opacity: isAdmin ? 1 : 0.5,
-              cursor: isAdmin ? "pointer" : "not-allowed",
             }}
           >
             <span aria-hidden="true" className="plus-icon">
